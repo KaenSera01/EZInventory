@@ -1,5 +1,0 @@
-C:\Users\kaen\source\repos\EZInventory\EZInventory\obj\x64\IL2CPP\net472\EZInventory.csproj.AssemblyReference.cache
-C:\Users\kaen\source\repos\EZInventory\EZInventory\obj\x64\IL2CPP\net472\EZInventory.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\kaen\source\repos\EZInventory\EZInventory\obj\x64\IL2CPP\net472\EZInventory.AssemblyInfoInputs.cache
-C:\Users\kaen\source\repos\EZInventory\EZInventory\obj\x64\IL2CPP\net472\EZInventory.AssemblyInfo.cs
-C:\Users\kaen\source\repos\EZInventory\EZInventory\obj\x64\IL2CPP\net472\EZInventory.csproj.CoreCompileInputs.cache
