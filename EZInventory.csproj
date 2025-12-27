@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Shared settings -->
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<LangVersion>8.0</LangVersion>
+		<Nullable>disable</Nullable>
+		<Configurations>Mono;IL2CPP</Configurations>
+		<Platforms>AnyCPU</Platforms>
+
+		<!-- Define your actual game install paths here -->
+		<MonoGame>C:\Program Files (x86)\Steam\steamapps\common\Schedule I_MONO</MonoGame>
+		<Il2CppGame>C:\Program Files (x86)\Steam\steamapps\common\Schedule I</Il2CppGame>
+	</PropertyGroup>
+
+	<!-- Mono build configuration -->
+	<PropertyGroup Condition="'$(Configuration)'=='Mono'">
+		<DefineConstants>MONO</DefineConstants>
+		<OutputPath>bin\Mono\</OutputPath>
+	</PropertyGroup>
+
+	<!-- IL2CPP build configuration -->
+	<PropertyGroup Condition="'$(Configuration)'=='IL2CPP'">
+		<DefineConstants>IL2CPP</DefineConstants>
+		<OutputPath>bin\IL2CPP\</OutputPath>
+	</PropertyGroup>
+
+	<!-- Shared NuGet packages -->
+	<ItemGroup>
+		<PackageReference Include="LavaGang.MelonLoader" Version="0.7.1" />
+		<PackageReference Include="Lib.Harmony" Version="2.4.2" />
+	</ItemGroup>
+
+	<!-- Mono references -->
+	<ItemGroup Condition="'$(Configuration)'=='Mono'">
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(MonoGame)\Schedule I_Data\Managed\Assembly-CSharp.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(MonoGame)\Schedule I_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine.InputLegacyModule">
+			<HintPath>$(MonoGame)\Schedule I_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<!-- IL2CPP references -->
+	<ItemGroup Condition="'$(Configuration)'=='IL2CPP'">
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine.InputLegacyModule">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
+		</Reference>
+
+		<Reference Include="Il2Cppmscorlib">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+		</Reference>
+
+		<Reference Include="Il2CppSystem">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Il2CppInterop.Runtime">
+	    <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Schedule I\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+</Project>
