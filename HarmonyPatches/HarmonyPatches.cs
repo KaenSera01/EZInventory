@@ -25,16 +25,15 @@ namespace EZInventory.HarmonyPatches
 	{
 		private static readonly FieldInfo primaryField = AccessTools.Field(typeof(ItemUIManager), "PrimarySlots");
 		private static readonly FieldInfo secondaryField = AccessTools.Field(typeof(ItemUIManager), "SecondarySlots");
+
 		static bool Prefix(ItemUIManager __instance, ItemSlotUI ui)
 		{
-			// Detect Ctrl + Shift
 			bool shiftHeld = GameInput.GetButton(GameInput.ButtonCode.QuickMove);
 			bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
 
 			if (!(shiftHeld && ctrlHeld))
-				return true; // not our gesture
+				return true;
 
-			// Must be in inventory screen with two inventories/storages
 			if (!__instance.QuickMoveEnabled)
 				return true;
 
@@ -43,10 +42,11 @@ namespace EZInventory.HarmonyPatches
 			if (clickedItem == null)
 				return true;
 
-			// BLOCK CASH
+			// skip cash for now
 			if (clickedItem.Definition.Name == "Cash")
 				return true;
 
+			// get the to and from slots, dependent on build config
 #if MONO
 			var primarySlots = primaryField.GetValue(__instance) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(__instance) as List<ItemSlot>;
@@ -72,12 +72,12 @@ namespace EZInventory.HarmonyPatches
 			}
 #endif
 
-			// Determine source inventory (primary or secondary)
+			// determine source inventory
 			bool inPrimary = primarySlots.Contains(clickedSlot);
 			var sourceList = inPrimary ? primarySlots : secondarySlots;
 			var destList = inPrimary ? secondarySlots : primarySlots;
 
-			// Collect all matching items in the source inventory
+			// get all items in the source inventory that match the type of the clicked item
 			List<ItemSlot> matching = new List<ItemSlot>();
 			foreach (var slot in sourceList)
 			{
@@ -110,13 +110,10 @@ namespace EZInventory.HarmonyPatches
 
 		static void Postfix(ItemUIManager __instance)
 		{
-			// Must be in a dual-inventory context
 			if (!__instance.QuickMoveEnabled)
 				return;
 
-			//
-			// --- Grab All hotkey (safe, non-blocking unless auto-close is ON) ---
-			//
+			// grab all
 			if (EZInventoryMod.GrabAllKey != null)
 			{
 				string key = EZInventoryMod.GrabAllKey.Value.ToUpperInvariant();
@@ -127,15 +124,13 @@ namespace EZInventory.HarmonyPatches
 					{
 						TakeEverything(__instance);
 
-						//// Auto-close support
+						//// auto-close if configured
 						//if (EZInventoryMod.GrabAllAutoClose != null &&
 						//	EZInventoryMod.GrabAllAutoClose.Value)
 						//{
 						//	__instance.gameObject.SetActive(false);
-						//	return; // Safe: user cannot Shift-Drag in the same frame
+						//	return; //	assumes player cannot shift-drag and grab all in the same frame
 						//}
-
-						// If auto-close is OFF, do NOT return — allow Shift-Drag to run next frame
 					}
 				}
 				else
@@ -144,7 +139,7 @@ namespace EZInventory.HarmonyPatches
 				}
 			}
 
-			// --- Deposit All hotkey ---
+			// deposit all
 			if (EZInventoryMod.DepositAllKey != null)
 			{
 				string dkey = EZInventoryMod.DepositAllKey.Value.ToUpperInvariant();
@@ -159,7 +154,7 @@ namespace EZInventory.HarmonyPatches
 						//	EZInventoryMod.DepositAllAutoClose.Value)
 						//{
 						//	__instance.gameObject.SetActive(false);
-						//	return; // safe: user cannot Shift-Drag in the same frame
+						//	return;	//	assumes player cannot shift-drag and deposit all in the same frame
 						//}
 					}
 				}
@@ -169,9 +164,8 @@ namespace EZInventory.HarmonyPatches
 				}
 			}
 
-			//
-			// --- Shift + LMB sweep (Shift-Drag) ---
-			//
+			
+			// shift-click drag across items
 			bool shiftHeld = GameInput.GetButton(GameInput.ButtonCode.QuickMove);
 			bool lmbHeld = GameInput.GetButton(GameInput.ButtonCode.PrimaryClick);
 
@@ -199,8 +193,7 @@ namespace EZInventory.HarmonyPatches
 			var sourceSlot = ui.assignedSlot;
 
 			// BLOCK CASH
-			if (sourceSlot.ItemInstance != null &&
-				sourceSlot.ItemInstance.Definition.Name == "Cash")
+			if (sourceSlot.ItemInstance != null && sourceSlot.ItemInstance.Definition.Name == "Cash")
 				return;
 
 
@@ -291,7 +284,7 @@ namespace EZInventory.HarmonyPatches
 			}
 #endif
 
-			// ALWAYS: take from secondary → primary
+			//	take from secondary → primary
 			var myInv = primarySlots;
 			var theirInv = secondarySlots;
 
@@ -303,7 +296,7 @@ namespace EZInventory.HarmonyPatches
 				if (slot.ItemInstance == null)
 					continue;
 
-				// Skip cash (dangerous)
+				// Skip cash for now
 				if (slot.ItemInstance.Definition.Name == "Cash")
 					continue;
 
@@ -343,7 +336,7 @@ namespace EZInventory.HarmonyPatches
 			}
 #endif
 
-			// ALWAYS: deposit from primary → secondary
+			// deposit from primary → secondary
 			var myInv = primarySlots;
 			var theirInv = secondarySlots;
 
@@ -355,7 +348,7 @@ namespace EZInventory.HarmonyPatches
 				if (slot.ItemInstance == null)
 					continue;
 
-				// Skip cash (dangerous)
+				// Skip cash for now
 				if (slot.ItemInstance.Definition.Name == "Cash")
 					continue;
 

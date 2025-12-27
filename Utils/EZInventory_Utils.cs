@@ -74,7 +74,6 @@ namespace EZInventory.Utils
 			int remaining = source.Quantity;
 			int moved = 0;
 
-			// Merge pass
 			foreach (var t in dest)
 			{
 				if (remaining <= 0) break;
@@ -89,7 +88,6 @@ namespace EZInventory.Utils
 				moved += cap;
 			}
 
-			// Empty slot pass
 			foreach (var t in dest)
 			{
 				if (remaining <= 0) break;
@@ -102,7 +100,7 @@ namespace EZInventory.Utils
 				moved += cap;
 			}
 
-			// Safe cleanup
+			// clean up
 			if (moved > 0)
 			{
 				if (remaining <= 0)
