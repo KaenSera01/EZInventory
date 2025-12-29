@@ -1,4 +1,4 @@
-﻿# EZInventory — Shift‑Drag, Move‑By‑Type, Grab All & Deposit All for Schedule One
+# EZInventory — Shift‑Drag, Move‑By‑Type, Grab All & Deposit All for Schedule One
 
 A lightweight, dual‑runtime (Mono + IL2CPP) inventory enhancement mod for **Schedule I**.  
 Adds several powerful quality‑of‑life features to make inventory management fast, intuitive, and satisfying.
@@ -27,7 +27,7 @@ Press your configured **Grab All hotkey** to instantly pull **every item** from 
 
 - Respects stack limits  
 - Smart merging behavior  
-- Optional **auto‑close** after grabbing (configurable)
+- Configurable auto‑close.
 
 ### **Deposit All**
 Press your configured **Deposit All hotkey** to move **all items** from your inventory into the target container.
@@ -35,7 +35,8 @@ Press your configured **Deposit All hotkey** to move **all items** from your inv
 - Great for unloading loot  
 - Automatically merges into existing stacks  
 - Honors container rules and capacity  
-
+- Configurable auto‑close.
+- 
 ### **Fully Configurable Hotkeys**
 All hotkeys — including Grab All, Deposit All, and the modifier keys for Shift‑Drag and Move‑By‑Type — can be customized in the mod’s config file.
 

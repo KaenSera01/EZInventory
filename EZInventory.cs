@@ -28,11 +28,11 @@ namespace EZInventory
 			);
 			MelonLogger.Msg($"EZInventory: GrabAllKey set to '{GrabAllKey.Value}'");
 
-			//GrabAllAutoClose = Config.CreateEntry(
-			//	"GrabAllAutoClose",
-			//	true, // default: auto-close ON
-			//	description: "Automatically close the inventory screen after Grab All."
-			//);
+			GrabAllAutoClose = Config.CreateEntry(
+				"GrabAllAutoClose",
+				true, // default: auto-close ON
+				description: "Automatically close the inventory screen after Grab All."
+			);
 
 			DepositAllKey = Config.CreateEntry(
 				"DepositAllKey",
@@ -41,11 +41,11 @@ namespace EZInventory
 			);
 			MelonLogger.Msg($"EZInventory: DepositAllKey set to '{DepositAllKey.Value}'");
 
-			//DepositAllAutoClose = Config.CreateEntry(
-			//	"DepositAllAutoClose",
-			//	false, // default: do NOT auto-close on deposit-all
-			//	description: "Automatically close the inventory after Deposit All."
-			//);
+			DepositAllAutoClose = Config.CreateEntry(
+				"DepositAllAutoClose",
+				false, // default: do NOT auto-close on deposit-all
+				description: "Automatically close the inventory after Deposit All."
+			);
 
 			MelonPreferences.Save();
 		}

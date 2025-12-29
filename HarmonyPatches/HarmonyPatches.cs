@@ -124,13 +124,13 @@ namespace EZInventory.HarmonyPatches
 					{
 						TakeEverything(__instance);
 
-						//// auto-close if configured
-						//if (EZInventoryMod.GrabAllAutoClose != null &&
-						//	EZInventoryMod.GrabAllAutoClose.Value)
-						//{
-						//	__instance.gameObject.SetActive(false);
-						//	return; //	assumes player cannot shift-drag and grab all in the same frame
-						//}
+						// auto-close if configured
+						if (EZInventoryMod.GrabAllAutoClose != null &&
+							EZInventoryMod.GrabAllAutoClose.Value)
+						{
+							StorageMenu.Instance.OpenedStorageEntity.Close();
+							return; //	assumes player cannot shift-drag and grab all in the same frame
+						}
 					}
 				}
 				else
@@ -150,12 +150,12 @@ namespace EZInventory.HarmonyPatches
 					{
 						DepositAll(__instance);
 
-						//if (EZInventoryMod.DepositAllAutoClose != null &&
-						//	EZInventoryMod.DepositAllAutoClose.Value)
-						//{
-						//	__instance.gameObject.SetActive(false);
-						//	return;	//	assumes player cannot shift-drag and deposit all in the same frame
-						//}
+						if (EZInventoryMod.DepositAllAutoClose != null &&
+							EZInventoryMod.DepositAllAutoClose.Value)
+						{
+							StorageMenu.Instance.OpenedStorageEntity.Close();
+							return; //	assumes player cannot shift-drag and deposit all in the same frame
+						}
 					}
 				}
 				else
