@@ -21,25 +21,30 @@ namespace EZInventory.Utils
 	internal static class EZInventoryUtils
 	{
 #if MONO
-        public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, List<ItemSlot> dest, bool fillEmptySlots = true)
+        public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, List<ItemSlot> dest, bool fillEmptySlots = true, bool filterAware = false)
         {
             if (source.ItemInstance == null)
                 return;
 
             int remaining = source.Quantity;
             int moved = 0;
+			SlotFilter blankFilter = new SlotFilter();
 
-            // Merge pass
-            foreach (var t in dest)
+			// Merge pass
+			foreach (var t in dest)
             {
                 if (remaining <= 0) break;
                 if (t.ItemInstance == null) continue;
                 if (!t.ItemInstance.CanStackWith(source.ItemInstance, false)) continue;
+				if (t.IsLocked || t.IsAddLocked) continue;
 
                 int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
                 if (cap <= 0) continue;
 
-                t.AddItem(source.ItemInstance.GetCopy(cap), false);
+				if (filterAware && t.PlayerFilter != blankFilter && !t.DoesItemMatchPlayerFilters(source.ItemInstance))
+					continue;
+
+				t.AddItem(source.ItemInstance.GetCopy(cap), false);
                 remaining -= cap;
                 moved += cap;
             }
@@ -50,9 +55,13 @@ namespace EZInventory.Utils
 				foreach (var t in dest)
 				{
 					if (remaining <= 0) break;
+					if (t.IsLocked || t.IsAddLocked) continue;
 
 					int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
 					if (cap <= 0) continue;
+
+					if (filterAware && t.PlayerFilter != blankFilter && !t.DoesItemMatchPlayerFilters(source.ItemInstance))
+						continue;
 
 					t.AddItem(source.ItemInstance.GetCopy(cap), false);
 					remaining -= cap;
@@ -85,7 +94,7 @@ namespace EZInventory.Utils
             return managed;
         }
 
-		public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, System.Collections.Generic.List<ItemSlot> dest, bool fillEmptySlots = true)
+		public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, System.Collections.Generic.List<ItemSlot> dest, bool fillEmptySlots = true, bool filterAware = false)
 		{
 			if (source.ItemInstance == null)
 				return;
@@ -102,6 +111,9 @@ namespace EZInventory.Utils
 				int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
 				if (cap <= 0) continue;
 
+				if (filterAware && !t.DoesItemMatchPlayerFilters(source.ItemInstance))
+					continue;
+
 				t.AddItem(source.ItemInstance.GetCopy(cap), false);
 				remaining -= cap;
 				moved += cap;
@@ -115,6 +127,9 @@ namespace EZInventory.Utils
 
 					int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
 					if (cap <= 0) continue;
+
+					if (filterAware && !t.DoesItemMatchPlayerFilters(source.ItemInstance))
+						continue;
 
 					t.AddItem(source.ItemInstance.GetCopy(cap), false);
 					remaining -= cap;

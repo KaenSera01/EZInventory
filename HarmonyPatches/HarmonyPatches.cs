@@ -53,26 +53,6 @@ namespace EZInventory.HarmonyPatches
 			var primarySlots = primaryField.GetValue(__instance) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(__instance) as List<ItemSlot>;
 #elif IL2CPP
-			//var il2cppPrimary = __instance.PrimarySlots;
-			//var il2cppSecondary = __instance.SecondarySlots;
-
-			//List<ItemSlot> primarySlots = null;
-			//List<ItemSlot> secondarySlots = null;
-
-			//if (il2cppPrimary != null)
-			//{
-			//	primarySlots = new List<ItemSlot>(il2cppPrimary.Count);
-			//	foreach (var s in il2cppPrimary)
-			//		primarySlots.Add(s);
-			//}
-
-			//if (il2cppSecondary != null)
-			//{
-			//	secondarySlots = new List<ItemSlot>(il2cppSecondary.Count);
-			//	foreach (var s in il2cppSecondary)
-			//		secondarySlots.Add(s);
-			//}
-
 			var primarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(__instance.PrimarySlots);
 			var secondarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(__instance.SecondarySlots);
 #endif
@@ -96,7 +76,7 @@ namespace EZInventory.HarmonyPatches
 			// Move each matching slot's contents
 			foreach (var slot in matching)
 			{
-				EZInventoryUtils.MoveSlotContents(__instance, slot, destList);
+				EZInventoryUtils.MoveSlotContents(__instance, slot, destList, true, ctrlHeld);
 			}
 
 			__instance.onItemMoved?.Invoke();
@@ -107,7 +87,7 @@ namespace EZInventory.HarmonyPatches
 
 
 	[HarmonyPatch(typeof(ItemUIManager), "Update")]
-	class EZInventory_ShiftDragMove_Patch
+	class EZInventory_Input_Patch
 	{
 		private static System.Collections.Generic.HashSet<ItemSlotUI> processed = new System.Collections.Generic.HashSet<ItemSlotUI>();
 		private static readonly FieldInfo primaryField = AccessTools.Field(typeof(ItemUIManager), "PrimarySlots");
@@ -123,6 +103,10 @@ namespace EZInventory.HarmonyPatches
 
 			if (StorageMenu.Instance == null)
 				return;
+
+			bool shiftHeld = GameInput.GetButton(GameInput.ButtonCode.QuickMove);   //	shift
+			bool ctrlHeld = GameInput.GetButton(GameInput.ButtonCode.Crouch);		//	ctrl
+			bool lmbHeld = GameInput.GetButton(GameInput.ButtonCode.PrimaryClick);  //	left mouse button
 
 			// grab all
 			if (EZInventoryMod.GrabAllKey != null)
@@ -162,12 +146,14 @@ namespace EZInventory.HarmonyPatches
 				{
 					if (Input.GetKeyDown(depositKey))
 					{
-						DepositAll(__instance);
+						DepositAll(__instance, ctrlHeld);
 
 						if (EZInventoryMod.DepositAllAutoClose != null &&
 							EZInventoryMod.DepositAllAutoClose.Value)
 						{
-							StorageMenu.Instance.OpenedStorageEntity.Close();
+							if (StorageMenu.Instance != null && StorageMenu.Instance.OpenedStorageEntity != null)
+								StorageMenu.Instance.OpenedStorageEntity.Close();
+
 							return; //	assumes player cannot shift-drag and deposit all in the same frame
 						}
 					}
@@ -192,7 +178,9 @@ namespace EZInventory.HarmonyPatches
 						if (EZInventoryMod.FillStacksAutoClose != null &&
 							EZInventoryMod.FillStacksAutoClose.Value)
 						{
-							StorageMenu.Instance.OpenedStorageEntity.Close();
+							if (StorageMenu.Instance != null && StorageMenu.Instance.OpenedStorageEntity != null) 
+								StorageMenu.Instance.OpenedStorageEntity.Close();
+
 							return; //	assumes player cannot shift-drag and deposit all in the same frame
 						}
 					}
@@ -281,16 +269,13 @@ namespace EZInventory.HarmonyPatches
 			}
 
 			// shift-click drag across items
-			bool shiftHeld = GameInput.GetButton(GameInput.ButtonCode.QuickMove);
-			bool lmbHeld = GameInput.GetButton(GameInput.ButtonCode.PrimaryClick);
-
-			if (shiftHeld && lmbHeld)
+			if (shiftHeld && lmbHeld && __instance.QuickMoveEnabled)
 			{
 				var hovered = __instance.HoveredSlot;
 				if (hovered != null && !processed.Contains(hovered))
 				{
 					processed.Add(hovered);
-					QuickMoveSlot(__instance, hovered);
+					QuickMoveSlot(__instance, hovered, ctrlHeld);
 				}
 			}
 			else
@@ -300,7 +285,7 @@ namespace EZInventory.HarmonyPatches
 			}
 		}
 
-		private static void QuickMoveSlot(ItemUIManager mgr, ItemSlotUI ui)
+		private static void QuickMoveSlot(ItemUIManager mgr, ItemSlotUI ui, bool filterAware = false)
 		{
 			if (!mgr.CanDragFromSlot(ui))
 				return;
@@ -310,7 +295,6 @@ namespace EZInventory.HarmonyPatches
 			// BLOCK CASH
 			if (sourceSlot.ItemInstance != null && sourceSlot.ItemInstance.Definition.Name == "Cash")
 				return;
-
 
 #if MONO
 			var method = AccessTools.Method(typeof(ItemUIManager), "GetQuickMoveSlots");
@@ -344,6 +328,9 @@ namespace EZInventory.HarmonyPatches
 
 				if (cap <= 0) continue;
 
+				if (filterAware && !t.DoesItemMatchPlayerFilters(sourceSlot.ItemInstance))
+					continue;
+
 				t.AddItem(sourceSlot.ItemInstance.GetCopy(cap), false);
 				moved += cap;
 			}
@@ -357,6 +344,9 @@ namespace EZInventory.HarmonyPatches
 									sourceSlot.Quantity - moved);
 
 				if (cap <= 0) continue;
+
+				if (filterAware && !t.DoesItemMatchPlayerFilters(sourceSlot.ItemInstance))
+					continue;
 
 				t.AddItem(sourceSlot.ItemInstance.GetCopy(cap), false);
 				moved += cap;
@@ -378,26 +368,6 @@ namespace EZInventory.HarmonyPatches
 			var primarySlots = primaryField.GetValue(mgr) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(mgr) as List<ItemSlot>;
 #elif IL2CPP
-			//var il2cppPrimary = mgr.PrimarySlots;
-			//var il2cppSecondary = mgr.SecondarySlots;
-
-			//List<ItemSlot> primarySlots = null;
-			//List<ItemSlot> secondarySlots = null;
-
-			//if (il2cppPrimary != null)
-			//{
-			//	primarySlots = new List<ItemSlot>(il2cppPrimary.Count);
-			//	foreach (var s in il2cppPrimary)
-			//		primarySlots.Add(s);
-			//}
-
-			//if (il2cppSecondary != null)
-			//{
-			//	secondarySlots = new List<ItemSlot>(il2cppSecondary.Count);
-			//	foreach (var s in il2cppSecondary)
-			//		secondarySlots.Add(s);
-			//}
-
 			var primarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.PrimarySlots);
 			var secondarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.SecondarySlots);
 #endif
@@ -424,35 +394,15 @@ namespace EZInventory.HarmonyPatches
 			mgr.onItemMoved?.Invoke();
 		}
 
-		private static void DepositAll(ItemUIManager mgr)
+		private static void DepositAll(ItemUIManager mgr, bool filterAware = false)
 		{
-			if (!mgr.QuickMoveEnabled)
-				return;
+			//if (!mgr.QuickMoveEnabled)
+			//	return;
 
 #if MONO
 			var primarySlots = primaryField.GetValue(mgr) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(mgr) as List<ItemSlot>;
 #elif IL2CPP
-			//var il2cppPrimary = mgr.PrimarySlots;
-			//var il2cppSecondary = mgr.SecondarySlots;
-
-			//List<ItemSlot> primarySlots = null;
-			//List<ItemSlot> secondarySlots = null;
-
-			//if (il2cppPrimary != null)
-			//{
-			//	primarySlots = new List<ItemSlot>(il2cppPrimary.Count);
-			//	foreach (var s in il2cppPrimary)
-			//		primarySlots.Add(s);
-			//}
-
-			//if (il2cppSecondary != null)
-			//{
-			//	secondarySlots = new List<ItemSlot>(il2cppSecondary.Count);
-			//	foreach (var s in il2cppSecondary)
-			//		secondarySlots.Add(s);
-			//}
-
 			var primarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.PrimarySlots);
 			var secondarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.SecondarySlots);
 #endif
@@ -473,7 +423,7 @@ namespace EZInventory.HarmonyPatches
 				if (slot.ItemInstance.Definition.Name == "Cash")
 					continue;
 
-				EZInventoryUtils.MoveSlotContents(mgr, slot, theirInv);
+				EZInventoryUtils.MoveSlotContents(mgr, slot, theirInv, true, filterAware);
 			}
 
 			mgr.onItemMoved?.Invoke();
@@ -488,26 +438,6 @@ namespace EZInventory.HarmonyPatches
 			var primarySlots = primaryField.GetValue(mgr) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(mgr) as List<ItemSlot>;
 #elif IL2CPP
-			//var il2cppPrimary = mgr.PrimarySlots;
-			//var il2cppSecondary = mgr.SecondarySlots;
-
-			//List<ItemSlot> primarySlots = null;
-			//List<ItemSlot> secondarySlots = null;
-
-			//if (il2cppPrimary != null)
-			//{
-			//	primarySlots = new List<ItemSlot>(il2cppPrimary.Count);
-			//	foreach (var s in il2cppPrimary)
-			//		primarySlots.Add(s);
-			//}
-
-			//if (il2cppSecondary != null)
-			//{
-			//	secondarySlots = new List<ItemSlot>(il2cppSecondary.Count);
-			//	foreach (var s in il2cppSecondary)
-			//		secondarySlots.Add(s);
-			//}
-
 			var primarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.PrimarySlots);
 			var secondarySlots = EZInventoryUtils.ToManagedList<ItemSlot>(mgr.SecondarySlots);
 #endif
