@@ -27,7 +27,7 @@
 
 	<!-- Shared NuGet packages -->
 	<ItemGroup>
-		<PackageReference Include="LavaGang.MelonLoader" Version="0.7.1" />
+		<PackageReference Include="LavaGang.MelonLoader" Version="0.7.0" />
 		<PackageReference Include="Lib.Harmony" Version="2.4.2" />
 	</ItemGroup>
 

@@ -13,6 +13,11 @@ namespace EZInventory
 		public static MelonPreferences_Entry<bool> GrabAllAutoClose;
 		public static MelonPreferences_Entry<string> DepositAllKey;
 		public static MelonPreferences_Entry<bool> DepositAllAutoClose;
+		public static MelonPreferences_Entry<string> FillStacksKey;
+		public static MelonPreferences_Entry<bool> FillStacksAutoClose;
+		public static MelonPreferences_Entry<string> CopyAllFilters;
+		public static MelonPreferences_Entry<string> PasteAllFilters;
+		public static MelonPreferences_Entry<string> ClearAllFilters;
 
 		public override void OnInitializeMelon()
 		{
@@ -46,6 +51,40 @@ namespace EZInventory
 				false, // default: do NOT auto-close on deposit-all
 				description: "Automatically close the inventory after Deposit All."
 			);
+
+			FillStacksKey = Config.CreateEntry(
+				"FillStacksKey",
+				"Q", // default hotkey for Fill Stacks
+				description: "Hotkey for Fill Stacks (case-insensitive)."
+			);
+			MelonLogger.Msg($"EZInventory: FillStacksKey set to '{FillStacksKey.Value}'");
+
+			FillStacksAutoClose = Config.CreateEntry(
+				"FillStacksAutoClose",
+				true, // default: do NOT auto-close on fill stacks
+				description: "Automatically close the inventory after Fill Stacks."
+			);
+
+			ClearAllFilters = Config.CreateEntry(
+				"ClearAllFilters",
+				"J", // default hotkey for Clear All Filters
+				description: "Hotkey for Clear All Filters (case-insensitive)."
+			);
+			MelonLogger.Msg($"EZInventory: ClearAllFilters set to '{ClearAllFilters.Value}'");
+
+			CopyAllFilters = Config.CreateEntry(
+				"CopyAllFilters",
+				"K", // default hotkey for Copy All Filters
+				description: "Hotkey for Copy All Filters (case-insensitive)."
+			);
+			MelonLogger.Msg($"EZInventory: CopyAllFilters set to '{CopyAllFilters.Value}'");
+
+			PasteAllFilters = Config.CreateEntry(
+				"PasteAllFilters",
+				"L", // default hotkey for Paste All Filters
+				description: "Hotkey for Paste All Filters (case-insensitive)."
+			);
+			MelonLogger.Msg($"EZInventory: PasteAllFilters set to '{PasteAllFilters.Value}'");
 
 			MelonPreferences.Save();
 		}
