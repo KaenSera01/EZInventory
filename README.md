@@ -14,13 +14,15 @@ Hold **Shift + Left Click** and sweep your cursor across items to rapidly move t
 - Automatically merges stacks  
 - Fills empty slots intelligently  
 - Smooth, continuous movement while dragging  
+- Add filter-awareness by holding down Ctrl.
 
 ### **Ctrl + Shift Move‑By‑Type**
 Hold **Ctrl + Shift** and click an item to move **all items of that type** from one inventory to the other.
 
 - Perfect for sorting loot  
 - Moves stacks and partial stacks  
-- Preserves stack limits and item rules  
+- Preserves stack limits and item rules
+- Filter aware
 
 ### **Grab All**
 Press your configured **Grab All hotkey** to instantly pull **every item** from the target inventory into your own.
@@ -36,7 +38,8 @@ Press your configured **Deposit All hotkey** to move **all items** from your inv
 - Automatically merges into existing stacks  
 - Honors container rules and capacity  
 - Configurable auto‑close.
-- 
+- Add filter-awarness by holding down Ctrl.
+  
 ### **Fully Configurable Hotkeys**
 All hotkeys — including Grab All, Deposit All, and the modifier keys for Shift‑Drag and Move‑By‑Type — can be customized in the mod’s config file.
 
