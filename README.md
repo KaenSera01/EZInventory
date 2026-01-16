@@ -47,13 +47,13 @@ All hotkeys — including Grab All, Deposit All, and the modifier keys for Shift
 - ✔ **Mono and IL2CPP runtime** builds included  
 - ✔ Safe to add/remove at any time  
 - ✔ Works on all inventory screens  
-- Built and compiled against v0.4.2f8  
+- Built and compiled against v0.4.2f9  
 
 ---
 
 ## 📦 Installation
 
-1. Install **MelonLoader** for Schedule One (built with MelonLoader v0.7.1).  
+1. Install **MelonLoader** for Schedule One (built with MelonLoader v0.7.0).  
 2. Download the mod and extract the `.dll` for your Schedule I branch (Mono for main, IL2CPP for alternate).  
 3. Drop the `.dll` into:
 	/Schedule I/Mods/

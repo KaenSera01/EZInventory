@@ -81,7 +81,8 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetDir)EZInventory.dll" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Schedule One\Mods" OverwriteReadOnlyFiles="true" />
+		<Copy Condition="'$(Configuration)' == 'Mono'" SourceFiles="$(TargetDir)EZInventory.dll" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Schedule I_MONO\Mods" OverwriteReadOnlyFiles="true" />
+		<Copy Condition="'$(Configuration)' == 'IL2CPP'" SourceFiles="$(TargetDir)EZInventory.dll" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Schedule I\Mods" OverwriteReadOnlyFiles="true" />
 	</Target>
 
 </Project>

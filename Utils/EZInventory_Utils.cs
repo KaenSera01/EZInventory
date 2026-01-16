@@ -107,6 +107,7 @@ namespace EZInventory.Utils
 				if (remaining <= 0) break;
 				if (t.ItemInstance == null) continue;
 				if (!t.ItemInstance.CanStackWith(source.ItemInstance, false)) continue;
+				if (t.IsLocked || t.IsAddLocked) continue;
 
 				int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
 				if (cap <= 0) continue;
@@ -124,6 +125,7 @@ namespace EZInventory.Utils
 				foreach (var t in dest)
 				{
 					if (remaining <= 0) break;
+					if (t.IsLocked || t.IsAddLocked) continue;
 
 					int cap = Math.Min(t.GetCapacityForItem(source.ItemInstance, false), remaining);
 					if (cap <= 0) continue;

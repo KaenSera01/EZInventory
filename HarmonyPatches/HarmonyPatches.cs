@@ -66,7 +66,9 @@ namespace EZInventory.HarmonyPatches
 			List<ItemSlot> matching = new List<ItemSlot>();
 			foreach (var slot in sourceList)
 			{
-				if (slot.ItemInstance != null &&
+				if (!slot.IsLocked && 
+					!slot.IsRemovalLocked &&
+					slot.ItemInstance != null &&
 					slot.ItemInstance.Definition == clickedItem.Definition)
 				{
 					matching.Add(slot);
@@ -92,6 +94,33 @@ namespace EZInventory.HarmonyPatches
 		private static System.Collections.Generic.HashSet<ItemSlotUI> processed = new System.Collections.Generic.HashSet<ItemSlotUI>();
 		private static readonly FieldInfo primaryField = AccessTools.Field(typeof(ItemUIManager), "PrimarySlots");
 		private static readonly FieldInfo secondaryField = AccessTools.Field(typeof(ItemUIManager), "SecondarySlots");
+
+#if MONO
+    private static readonly FieldInfo itemSlotOwnerField =
+        AccessTools.Field(typeof(ItemUIManager), "ItemSlotOwner"); // or whatever the actual name is
+#elif IL2CPP
+		private static readonly FieldInfo itemSlotOwnerField =
+			AccessTools.Field(typeof(ItemUIManager), "ItemSlotOwner");
+#endif
+
+		private static IItemSlotOwner GetCurrentOwner(ItemUIManager mgr)
+		{
+			if (itemSlotOwnerField == null)
+				return null;
+
+			return itemSlotOwnerField.GetValue(mgr) as IItemSlotOwner;
+		}
+
+		private static System.Collections.Generic.List<ItemSlot> GetContainerSlots(ItemUIManager mgr)
+		{
+#if MONO
+			var secondarySlots = secondaryField.GetValue(mgr) as System.Collections.Generic.List<ItemSlot>;
+			return secondarySlots;
+#elif IL2CPP
+			// mgr.SecondarySlots is Il2CppSystem.Collections.Generic.List<ItemSlot>
+			return EZInventoryUtils.ToManagedList<ItemSlot>(mgr.SecondarySlots);
+#endif
+		}
 
 		static void Postfix(ItemUIManager __instance)
 		{
@@ -195,18 +224,31 @@ namespace EZInventory.HarmonyPatches
 				{
 					if (Input.GetKeyDown(copyKey))
 					{
-						if (StorageMenu.Instance != null && StorageMenu.Instance.OpenedStorageEntity != null)
+						var itemSlots = GetContainerSlots(__instance);
+						if (itemSlots == null)
+							return;
+
+#if MONO
+						var slotFilters = new System.Collections.Generic.List<SlotFilter>(itemSlots.Count);
+						foreach (var slot in itemSlots)
 						{
-							List<SlotFilter> slotFilters = new List<SlotFilter>();	
-							List<ItemSlot> itemSlots = StorageMenu.Instance.OpenedStorageEntity.ItemSlots;
-							
-							foreach (var slot in itemSlots)
-							{
-								if (slot.PlayerFilter != null && slot.CanPlayerSetFilter)
-									slotFilters.Add(slot.PlayerFilter);
-							}
-							EZIClipboard.Copy(slotFilters);
+							if (slot.CanPlayerSetFilter)
+								slotFilters.Add(slot.PlayerFilter != null ? slot.PlayerFilter.Clone() : null);
+							else
+								slotFilters.Add(null);
 						}
+						EZIClipboard.Copy(slotFilters);
+#elif IL2CPP
+						var slotFilters = new Il2CppSystem.Collections.Generic.List<SlotFilter>(itemSlots.Count);
+						foreach (var slot in itemSlots)
+						{
+							if (slot.CanPlayerSetFilter)
+								slotFilters.Add(slot.PlayerFilter != null ? slot.PlayerFilter.Clone() : null);
+							else
+								slotFilters.Add(null);
+						}
+						EZIClipboard.Copy(slotFilters);
+#endif
 					}
 				}
 			}
@@ -218,22 +260,47 @@ namespace EZInventory.HarmonyPatches
 				{
 					if (Input.GetKeyDown(pasteKey))
 					{
-						if (EZIClipboard.HasFilters && StorageMenu.Instance != null && StorageMenu.Instance.OpenedStorageEntity != null)
+						if (!EZIClipboard.HasFilters)
+							return;
+
+						var itemSlots = GetContainerSlots(__instance);
+						if (itemSlots == null)
+							return;
+
+#if MONO
+						var copied = EZIClipboard.CopiedFilters; // List<SlotFilter>
+						int count = Math.Min(copied.Count, itemSlots.Count);
+
+						for (int i = 0; i < count; i++)
 						{
-							var slotFilters = EZIClipboard.CopiedFilters;
-							var itemSlots = StorageMenu.Instance.OpenedStorageEntity.ItemSlots;
-							int count = Math.Min(slotFilters.Count, itemSlots.Count);
-							for (int i = 0; i < count; i++)
-							{
-								var slot = itemSlots[i];
-								var filter = slotFilters[i];
-								if (slot.CanPlayerSetFilter)
-								{
-									slot.SetPlayerFilter(filter.Clone());
-									
-								}
-							}								
+							var slot = itemSlots[i];
+							if (!slot.CanPlayerSetFilter)
+								continue;
+
+							var copiedFilter = copied[i];
+							if (copiedFilter == null)
+								slot.SetPlayerFilter(new SlotFilter());
+							else
+								slot.SetPlayerFilter(copiedFilter.Clone());
 						}
+#elif IL2CPP
+						var copied = EZIClipboard.CopiedFilters; // Il2CppSystem.Collections.Generic.List<SlotFilter>
+						int count = Math.Min(copied.Count, itemSlots.Count);
+
+						for (int i = 0; i < count; i++)
+						{
+							var slot = itemSlots[i];
+							if (!slot.CanPlayerSetFilter)
+								continue;
+
+							var copiedFilter = copied[i];
+							if (copiedFilter == null)
+								slot.SetPlayerFilter(new SlotFilter());
+							else
+								slot.SetPlayerFilter(copiedFilter.Clone());
+						}
+#endif
+						__instance.onItemMoved?.Invoke();
 					}
 				}
 			}
@@ -245,25 +312,17 @@ namespace EZInventory.HarmonyPatches
 				{
 					if (Input.GetKeyDown(clearKey))
 					{
-						if (StorageMenu.Instance != null && StorageMenu.Instance.OpenedStorageEntity != null)
+						var itemSlots = GetContainerSlots(__instance);
+						if (itemSlots == null)
+							return;
+
+						foreach (var slot in itemSlots)
 						{
-							var itemSlots = StorageMenu.Instance.OpenedStorageEntity.ItemSlots;							
-
-                            foreach (var item in itemSlots)
-                            {								
-								if (item.CanPlayerSetFilter && item.PlayerFilter != null)
-								{
-									var clearedSlotFilter = new SlotFilter
-									{
-										Type = SlotFilter.EType.None,
-										ItemIDs = new List<string>(),
-										AllowedQualities = new List<EQuality>()
-									};
-
-									item.SetPlayerFilter(clearedSlotFilter);
-								}
-                            }
+							if (slot.CanPlayerSetFilter)
+								slot.SetPlayerFilter(new SlotFilter());
 						}
+
+						__instance.onItemMoved?.Invoke();
 					}
 				}
 			}
@@ -321,6 +380,7 @@ namespace EZInventory.HarmonyPatches
 			{
 				if (moved >= sourceSlot.Quantity) break;
 				if (t.ItemInstance == null) continue;
+				if (t.IsLocked || t.IsAddLocked || t.IsRemovalLocked) continue;
 				if (!t.ItemInstance.CanStackWith(sourceSlot.ItemInstance, false)) continue;
 
 				int cap = Mathf.Min(t.GetCapacityForItem(sourceSlot.ItemInstance, false),
@@ -329,6 +389,9 @@ namespace EZInventory.HarmonyPatches
 				if (cap <= 0) continue;
 
 				if (filterAware && !t.DoesItemMatchPlayerFilters(sourceSlot.ItemInstance))
+					continue;
+
+				if (sourceSlot.IsRemovalLocked || sourceSlot.IsLocked)
 					continue;
 
 				t.AddItem(sourceSlot.ItemInstance.GetCopy(cap), false);
@@ -344,7 +407,10 @@ namespace EZInventory.HarmonyPatches
 									sourceSlot.Quantity - moved);
 
 				if (cap <= 0) continue;
-
+				
+				if (sourceSlot.IsRemovalLocked || sourceSlot.IsLocked)
+					continue;
+				
 				if (filterAware && !t.DoesItemMatchPlayerFilters(sourceSlot.ItemInstance))
 					continue;
 
@@ -388,6 +454,9 @@ namespace EZInventory.HarmonyPatches
 				if (slot.ItemInstance.Definition.Name == "Cash")
 					continue;
 
+				if (slot.IsRemovalLocked || slot.IsLocked)
+					continue;
+
 				EZInventoryUtils.MoveSlotContents(mgr, slot, myInv);
 			}
 
@@ -396,9 +465,6 @@ namespace EZInventory.HarmonyPatches
 
 		private static void DepositAll(ItemUIManager mgr, bool filterAware = false)
 		{
-			//if (!mgr.QuickMoveEnabled)
-			//	return;
-
 #if MONO
 			var primarySlots = primaryField.GetValue(mgr) as List<ItemSlot>;
 			var secondarySlots = secondaryField.GetValue(mgr) as List<ItemSlot>;
@@ -421,6 +487,9 @@ namespace EZInventory.HarmonyPatches
 
 				// Skip cash for now
 				if (slot.ItemInstance.Definition.Name == "Cash")
+					continue;
+
+				if (slot.IsAddLocked || slot.IsLocked)
 					continue;
 
 				EZInventoryUtils.MoveSlotContents(mgr, slot, theirInv, true, filterAware);
@@ -456,6 +525,9 @@ namespace EZInventory.HarmonyPatches
 
 				// Skip cash for now
 				if (slot.ItemInstance.Definition.Name == "Cash")
+					continue;
+
+				if (slot.IsRemovalLocked || slot.IsLocked)
 					continue;
 
 				EZInventoryUtils.MoveSlotContents(mgr, slot, playerInv, false);
