@@ -3,8 +3,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using System.Collections.Generic;
-
 
 #if MONO
 using ScheduleOne.ItemFramework;
@@ -21,7 +19,7 @@ namespace EZInventory.Utils
 	internal static class EZInventoryUtils
 	{
 #if MONO
-        public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, List<ItemSlot> dest, bool fillEmptySlots = true, bool filterAware = false)
+		public static void MoveSlotContents(ItemUIManager mgr, ItemSlot source, List<ItemSlot> dest, bool fillEmptySlots = true, bool filterAware = false)
         {
             if (source.ItemInstance == null)
                 return;
@@ -202,5 +200,7 @@ namespace EZInventory.Utils
 
 		public static bool HasFilters =>
 			CopiedFilters != null && CopiedFilters.Count > 0;
+
+		
 	}
 }

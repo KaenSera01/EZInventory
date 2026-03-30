@@ -3,21 +3,24 @@ using UnityEngine;
 using MelonLoader;
 using System.Reflection;
 using EZInventory.Utils;
-using System;
-
 
 #if MONO
+using System;
 using ScheduleOne;
 using ScheduleOne.UI;
 using ScheduleOne.UI.Items;
 using ScheduleOne.ItemFramework;
+using ScheduleOne.Tools;
 using System.Collections.Generic;
+using ScheduleOne.DevUtilities;
 #elif IL2CPP
+using Il2CppSystem;
 using Il2CppScheduleOne;
 using Il2CppScheduleOne.UI;
 using Il2CppScheduleOne.UI.Items;
 using Il2CppScheduleOne.ItemFramework;
 using Il2CppSystem.Collections.Generic;
+using Il2CppScheduleOne.DevUtilities;
 #endif
 
 namespace EZInventory.HarmonyPatches
@@ -131,6 +134,12 @@ namespace EZInventory.HarmonyPatches
 				return;
 
 			if (StorageMenu.Instance == null)
+				return;
+
+			if (Singleton<ItemUIManager>.Instance.FilterConfigPanel.IsOpen)
+				return;
+
+			if (EZInventoryMod.ConsoleCanvas != null && EZInventoryMod.ConsoleCanvas.enabled)
 				return;
 
 			bool shiftHeld = GameInput.GetButton(GameInput.ButtonCode.QuickMove);   //	shift

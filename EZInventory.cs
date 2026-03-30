@@ -1,7 +1,15 @@
 ﻿using EZInventory;
 using MelonLoader;
+using System.Collections;
+using UnityEngine;
 
-[assembly: MelonInfo(typeof(EZInventoryMod), "EZInventory", "1.0.2", "Kaen01")]
+#if MONO
+using ScheduleOne.UI;
+#elif IL2CPP
+using Il2CppScheduleOne.UI;
+#endif
+
+[assembly: MelonInfo(typeof(EZInventoryMod), "EZInventory", "1.4.0", "Kaen01")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace EZInventory
@@ -18,6 +26,22 @@ namespace EZInventory
 		public static MelonPreferences_Entry<string> CopyAllFilters;
 		public static MelonPreferences_Entry<string> PasteAllFilters;
 		public static MelonPreferences_Entry<string> ClearAllFilters;
+
+		public static Canvas ConsoleCanvas;
+
+		public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+		{
+			MelonCoroutines.Start(FindConsole());
+		}
+
+		private IEnumerator FindConsole()
+		{
+			yield return new WaitForSeconds(1f);
+			var console = GameObject.FindObjectOfType<ConsoleUI>();
+
+			if (console != null)
+				ConsoleCanvas = console.canvas;
+		}
 
 		public override void OnInitializeMelon()
 		{

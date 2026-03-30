@@ -67,6 +67,10 @@
 		<Reference Include="Il2CppSystem">
 			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
 		</Reference>
+
+		<Reference Include="Il2CppSystem">
+			<HintPath>$(Il2CppGame)\MelonLoader\Il2CppAssemblies\Il2CppScheduleOne.Core.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="FishNet.Runtime">
@@ -77,6 +81,9 @@
 	  </Reference>
 	  <Reference Include="Il2CppInterop.Runtime">
 	    <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Schedule I\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.UIModule">
+	    <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
